@@ -4,6 +4,15 @@
 using namespace std;
 
 const int HOURSES_PER_PLAYER = 4;
+const int MAX_ROW = 4;
+const int MAX_COL = 4;
+const int EDGE_OF_POINT = 10;
+const int SPACE_BETWEEN_POINT = 2;
+
+struct Settings
+{
+
+};
 
 struct Hourse
 {
@@ -46,7 +55,26 @@ struct Player
 
 struct Point 
 {
+	int X;
+	int Y;
+	Point(int x = 0, int y = 0)
+	{
+		X = x;
+		Y = y;
+	}
+};
 
+
+struct Map
+{
+	Player Players[4];
+	Point Grid[MAX_ROW][MAX_COL];
+	int Size;
+
+	Map(int size = 0)
+	{
+		Size = 0;
+	}
 };
 
 int main()
