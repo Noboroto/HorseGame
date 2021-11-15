@@ -90,24 +90,40 @@ struct Map
 		Size = size;
 	}
 
-	bool isValid(const int& startX, const int& startY, const int& desX, const int& desY, const int Count)
+	void moveHourse(const int& ID, const int& desX, const int& desY, const int Count)
 	{
+		if (isValidPath(ID, Hourses[ID].PosX, Hourses[ID].PosY, desX, desY, Count))
+		{
+			
+		}
+		else
+		{
+
+		}
+	}
+
+	bool isValidPath(const int &ID, const int& startX, const int& startY, const int& desX, const int& desY, const int Count)
+	{
+		if (Grid[desX][desY].HourseID != -1 &&
+			Hourses[Grid[desX][desY].HourseID].PlayerID == Hourses[ID].PlayerID)
+			return false;
 		if (!Count && (startX != desX) && (startY != desY)) return false;
-		else if ((startX == desX) && (startY == desY)) return true;
+		else if (!Count && ((startX == desX) && (startY == desY))) return true;
+		else if (Grid[startX][startY].HourseID != ID && Grid[startX][startY].HourseID != -1) return false;
 		switch (Grid[startY][startX].Effect)
 		{
 		case UP:
 			if (startX - 1 < 0) return false;
-			return isValid(startX - 1, startY, desX, desY, Count - 1);
+			return isValidPath(ID, startX - 1, startY, desX, desY, Count - 1);
 		case DOWN:
 			if (startX + 1 >= Size) return false;
-			return isValid(startX + 1, startY, desX, desY, Count - 1);
+			return isValidPath(ID, startX + 1, startY, desX, desY, Count - 1);
 		case LEFT:
 			if (startY - 1 < 0) return false;
-			return isValid(startX, startY - 1, desX, desY, Count - 1);
+			return isValidPath(ID, startX, startY - 1, desX, desY, Count - 1);
 		case RIGHT:
 			if (startY + 1 >= Size) return false;
-			return isValid(startX, startY + 1, desX, desY, Count - 1);
+			return isValidPath(ID, startX, startY + 1, desX, desY, Count - 1);
 		default:
 			return false;
 		}
