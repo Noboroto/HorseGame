@@ -3,16 +3,24 @@
 #include <fstream>
 #include <cstdio>
 #include <string>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
+//CONSTANTS FILE NAME
+const string ACCOUNTS_FILE = "accounts.txt";
+
+//LIMITATION
 const int MAX_PLAYER_PER_MAP = 4;
 const int MAX_HOURSE_PER_PLAYER = 4;
 const int MAX_ROW = 4;
 const int MAX_COL = 4;
 const int SPACE_BETWEEN_POINT = 2;
 const int MAX_NAME_DISPLAY = 10;
+const int MAX_ACCOUNT = 100;
 
+//DISPLAY CHARACTER
 const char UP_CHAR = '^';
 const char DOWN_CHAR = 'v';
 const char LEFT_CHAR = '<';
@@ -20,8 +28,78 @@ const char RIGHT_CHAR = '>';
 const string FINISH_STRING = "FINISH";
 const string START_STRING = "START";
 
-bool haveWinner = false;
+bool haveWinner_ = false;
 string Winner = "?";
+
+struct Player
+{
+	string Username;
+	string Password;
+	string Name;
+	int Win;
+	int Tie;
+
+	Player(string username = "", string password = "", string name = "", int win = 0, int tie = 0)
+	{
+		Username = username;
+		Password = password;
+		Name = name;
+		Win = win;
+		Tie = tie;
+	}
+
+	bool canLogin(string usename, string password)
+	{
+		return (usename == Username) && (password == Password);
+	}
+};
+
+Player Accounts_[MAX_ACCOUNT];
+int AccountCounter;
+
+void loadAccounts()
+{
+	ifstream file;
+	file.open(ACCOUNTS_FILE);
+	file >> AccountCounter;
+	AccountCounter = (AccountCounter > 100) ? 100 : AccountCounter;
+	string tmp;
+	getline(file, tmp);
+	for (int i = 0; i < AccountCounter; ++i)
+	{
+		Accounts_[i] = Player();
+		getline(file, tmp);
+		Accounts_[i].Username = tmp;
+		getline(file, tmp);
+		Accounts_[i].Password = tmp;
+		getline(file, tmp);
+		Accounts_[i].Name = tmp;
+		file >> Accounts_[i].Win;
+		file >> Accounts_[i].Tie;
+	}
+	file.close();
+}
+
+void saveAccounts()
+{
+	ofstream file;
+	file.open(ACCOUNTS_FILE);
+	file << AccountCounter << '\n';
+	for (int i = 0; i < AccountCounter; ++i)
+	{
+		file << Accounts_[i].Username << '\n';
+		file << Accounts_[i].Password << '\n';
+		file << Accounts_[i].Name << '\n';
+		file << Accounts_[i].Win << ' ' << Accounts_[i].Tie << '\n';
+	}
+	file.close();
+}
+
+int getDice(int from = 1, int to = 6)
+{
+	srand(time(NULL));
+	return rand() % (to - from + 1) + from;
+}
 
 enum CellEffect
 {
@@ -44,39 +122,18 @@ struct Hourse
 	int PosX;
 	int PosY;
 	char DisplayID[MAX_NAME_DISPLAY];
-	string PlayerID;
+	int PlayerID;
 
-	Hourse(int posx = 0, int posy = 0, string playerid = "")
+	Hourse(int posx = 0, int posy = 0, int playerid = 0)
 	{
 		PosX = posx;
 		PosY = posy;
 		PlayerID = playerid;
-		for (int i = 0; i < (playerid.size() < MAX_NAME_DISPLAY) ? playerid.size() : MAX_NAME_DISPLAY; ++i)
+		string tmp = Accounts_[playerid].Name;
+		for (int i = 0; i < (tmp.size() < MAX_NAME_DISPLAY) ? tmp.size() : MAX_NAME_DISPLAY; ++i)
 		{
-			DisplayID[i] = playerid[i];
+			DisplayID[i] = tmp[i];
 		}
-	}
-};
-
-struct Player
-{
-	string Username;
-	string Password;
-	string Name;
-	int Score;
-
-	Player(string username = "", string password = "", string name = "", int score = 0,
-			int startx = 0, int starty = 0)
-	{
-		Username = username;
-		Password = password;
-		Name = name;
-		Score = score;
-	}
-
-	bool canLogin(string usename, string password)
-	{
-		return (usename == Username) && (password == Password);
 	}
 };
 
@@ -95,16 +152,17 @@ struct Point
 	}
 };
 
-
 struct Map
 {
 	int PlayerID[MAX_PLAYER_PER_MAP];
 	Point Grid[MAX_ROW][MAX_COL];
 	Hourse Hourses[MAX_PLAYER_PER_MAP * MAX_HOURSE_PER_PLAYER];
 	int Size;
+	int MaxTurn;
 
-	Map(int size = 0)
+	Map(int size = 0, int maxturn = 0)
 	{
+		MaxTurn = (maxturn > size*size) ? maxturn : size*size;
 		Size = size;
 		for (int i = 0; i < size; ++i)
 		{
@@ -170,7 +228,7 @@ struct Map
 				Grid[desX][desY].HourseID = ID;
 				if (Grid[desX][desY].Effect == FINISH)
 				{
-					haveWinner = true;
+					haveWinner_ = true;
 				}
 			}
 		}
@@ -205,6 +263,11 @@ struct Map
 		default:
 			return false;
 		}
+	}
+
+	void printMap()
+	{
+
 	}
 };
 
