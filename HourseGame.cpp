@@ -1,5 +1,6 @@
 #include <iostream>
 #include <Windows.h>
+#include <fstream>
 
 using namespace std;
 
@@ -88,6 +89,45 @@ struct Map
 	Map(int size = 0)
 	{
 		Size = size;
+		for (int i = 0; i < size; ++i)
+		{
+			for (int j = 0; j < size; ++j)
+			{
+				Grid[i][j].Effect = RIGHT;
+			}
+		}
+	}
+
+	void saveMap(string file_name)
+	{
+		ofstream file;
+		file.open(file_name);
+		file << Size << '\n';
+		for (int i = 0; i < Size; ++i)
+		{
+			for (int j = 0; j < Size; ++j)
+			{
+				file << (int)Grid[i][j].Effect << ' ';
+			}
+			file << '\n';
+		}
+		file.close();
+	}
+
+	void loadMap(string file_name)
+	{
+		ifstream file;
+		int x;
+		file.open(file_name);
+		file >> Size;
+		for (int i = 0; i < Size; ++i)
+		{
+			for (int j = 0; j < Size; ++j)
+			{
+				file >> x;
+				Grid[i][j].Effect = (CellEffect)x;
+			}
+		}
 	}
 
 	void moveHourse(const int& ID, const int& desX, const int& desY, const int Count)
@@ -132,5 +172,7 @@ struct Map
 
 int main()
 {
-
+	Map test = Map(0);
+	test.loadMap("abc.txt");
+	return 0;
 }
