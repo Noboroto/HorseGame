@@ -172,7 +172,5 @@ struct Map
 
 int main()
 {
-	Map test = Map(0);
-	test.loadMap("abc.txt");
 	return 0;
 }
