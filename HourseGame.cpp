@@ -47,7 +47,7 @@ struct Player
 	string Password;
 	string Name;
 	int Score;
-	
+
 	Player(string username = "", string password = "", string name = "", int score = 0,
 			int startx = 0, int starty = 0)
 	{
@@ -93,8 +93,14 @@ struct Map
 		{
 			for (int j = 0; j < size; ++j)
 			{
+				Grid[i][j].HourseID = -1;
 				Grid[i][j].Effect = RIGHT;
 			}
+		}
+
+		for (int i = 0; i < MAX_PLAYER_PER_MAP; +i)
+		{
+			PlayerID[i] = -1;
 		}
 	}
 
@@ -134,12 +140,16 @@ struct Map
 	{
 		if (isValidPath(ID, Hourses[ID].PosX, Hourses[ID].PosY, desX, desY, Count))
 		{
-			
+			if (Hourses[Grid[desX][desY].HourseID].PlayerID != Hourses[ID].PlayerID)
+			{
+				Hourses[Grid[desX][desY].HourseID].PosX = -1;
+				Hourses[Grid[desX][desY].HourseID].PosY = -1;
+				Hourses[ID].PosX = desX;
+				Hourses[ID].PosY = desY;
+				Grid[desX][desY].HourseID = ID;
+			}
 		}
-		else
-		{
-
-		}
+		else cout << "You cannot go to this point. Please try again or end your turn\n"; 
 	}
 
 	bool isValidPath(const int &ID, const int& startX, const int& startY, const int& desX, const int& desY, const int Count)
@@ -147,9 +157,12 @@ struct Map
 		if (Grid[desX][desY].HourseID != -1 &&
 			Hourses[Grid[desX][desY].HourseID].PlayerID == Hourses[ID].PlayerID)
 			return false;
-		if (!Count && (startX != desX) && (startY != desY)) return false;
-		else if (!Count && ((startX == desX) && (startY == desY))) return true;
-		else if (Grid[startX][startY].HourseID != ID && Grid[startX][startY].HourseID != -1) return false;
+		else if (!Count && (startX != desX) && (startY != desY)) 
+			return false;
+		else if (!Count && ((startX == desX) && (startY == desY))) 
+			return true;
+		else if (Grid[startX][startY].HourseID != -1) 
+			return false;
 		switch (Grid[startY][startX].Effect)
 		{
 		case UP:
@@ -172,5 +185,31 @@ struct Map
 
 int main()
 {
+	for (int i = 0; i < 10; ++i)
+	{
+		cout << '-';
+	}
+	cout << "\n|";
+	for (int i = 0; i < 8; ++i)
+	{
+		cout << " ";
+	}
+	cout << "|\n";	
+	cout << "\n|";
+	for (int i = 0; i < 8; ++i)
+	{
+		cout << " ";
+	}
+	cout << "|\n";
+	cout << "\n|";
+	for (int i = 0; i < 8; ++i)
+	{
+		cout << " ";
+	}
+	cout << "|\n";
+	for (int i = 0; i < 10; ++i)
+	{
+		cout << '-';
+	}
 	return 0;
 }
