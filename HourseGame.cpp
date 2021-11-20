@@ -1,6 +1,8 @@
-#include <iostream>
+﻿#include <iostream>
 #include <Windows.h>
 #include <fstream>
+#include <cstdio>
+#include <string>
 
 using namespace std;
 
@@ -10,6 +12,16 @@ const int MAX_ROW = 4;
 const int MAX_COL = 4;
 const int SPACE_BETWEEN_POINT = 2;
 const int MAX_NAME_DISPLAY = 10;
+
+const char UP_CHAR = '^';
+const char DOWN_CHAR = 'v';
+const char LEFT_CHAR = '<';
+const char RIGHT_CHAR = '>';
+const string FINISH_STRING = "FINISH";
+const string START_STRING = "START";
+
+bool haveWinner = false;
+string Winner = "?";
 
 enum CellEffect
 {
@@ -31,6 +43,7 @@ struct Hourse
 {
 	int PosX;
 	int PosY;
+	char DisplayID[MAX_NAME_DISPLAY];
 	string PlayerID;
 
 	Hourse(int posx = 0, int posy = 0, string playerid = "")
@@ -38,6 +51,10 @@ struct Hourse
 		PosX = posx;
 		PosY = posy;
 		PlayerID = playerid;
+		for (int i = 0; i < (playerid.size() < MAX_NAME_DISPLAY) ? playerid.size() : MAX_NAME_DISPLAY; ++i)
+		{
+			DisplayID[i] = playerid[i];
+		}
 	}
 };
 
@@ -134,19 +151,27 @@ struct Map
 				Grid[i][j].Effect = (CellEffect)x;
 			}
 		}
+		file.close();
 	}
 
 	void moveHourse(const int& ID, const int& desX, const int& desY, const int Count)
 	{
 		if (isValidPath(ID, Hourses[ID].PosX, Hourses[ID].PosY, desX, desY, Count))
 		{
-			if (Hourses[Grid[desX][desY].HourseID].PlayerID != Hourses[ID].PlayerID)
+			if (Hourses[Grid[desX][desY].HourseID].DisplayID != Hourses[ID].DisplayID)
 			{
-				Hourses[Grid[desX][desY].HourseID].PosX = -1;
-				Hourses[Grid[desX][desY].HourseID].PosY = -1;
+				if (Grid[desX][desY].HourseID != -1)
+				{
+					Hourses[Grid[desX][desY].HourseID].PosX = -1;
+					Hourses[Grid[desX][desY].HourseID].PosY = -1;
+				}
 				Hourses[ID].PosX = desX;
 				Hourses[ID].PosY = desY;
 				Grid[desX][desY].HourseID = ID;
+				if (Grid[desX][desY].Effect == FINISH)
+				{
+					haveWinner = true;
+				}
 			}
 		}
 		else cout << "You cannot go to this point. Please try again or end your turn\n"; 
@@ -155,7 +180,7 @@ struct Map
 	bool isValidPath(const int &ID, const int& startX, const int& startY, const int& desX, const int& desY, const int Count)
 	{
 		if (Grid[desX][desY].HourseID != -1 &&
-			Hourses[Grid[desX][desY].HourseID].PlayerID == Hourses[ID].PlayerID)
+			Hourses[Grid[desX][desY].HourseID].DisplayID == Hourses[ID].DisplayID)
 			return false;
 		else if (!Count && (startX != desX) && (startY != desY)) 
 			return false;
@@ -185,31 +210,5 @@ struct Map
 
 int main()
 {
-	for (int i = 0; i < 10; ++i)
-	{
-		cout << '-';
-	}
-	cout << "\n|";
-	for (int i = 0; i < 8; ++i)
-	{
-		cout << " ";
-	}
-	cout << "|\n";	
-	cout << "\n|";
-	for (int i = 0; i < 8; ++i)
-	{
-		cout << " ";
-	}
-	cout << "|\n";
-	cout << "\n|";
-	for (int i = 0; i < 8; ++i)
-	{
-		cout << " ";
-	}
-	cout << "|\n";
-	for (int i = 0; i < 10; ++i)
-	{
-		cout << '-';
-	}
 	return 0;
 }
