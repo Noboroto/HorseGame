@@ -17,7 +17,8 @@ const int MAX_HOURSE_PER_PLAYER = 4;
 const int MAX_ROW = 10;
 const int MAX_COL = 10;
 const int SPACE_BETWEEN_POINT = 2;
-const int MAX_NAME_DISPLAY = 10;
+const int MAX_NAME_DISPLAY = 9;
+const int MID_NAME_DISPLAY = MAX_NAME_DISPLAY / 2;
 const int MAX_ACCOUNT = 100;
 
 //DISPLAY CHARACTER
@@ -288,7 +289,7 @@ struct Map
 	{
 		const int SIZE = MAX_NAME_DISPLAY + 2;
 		char pattern[SIZE];
-		cout << "   ";
+		for (int i = 0; i < 4; ++i) cout << ' ';
 		for (int i = 0; i < SIZE; ++i)
 		{
 			pattern[i] = ' ';
@@ -302,16 +303,108 @@ struct Map
 		cout << '\n';
 	}
 
+	void printRowhorizontalLine()
+	{
+		for (int i = 0; i < 4; ++i) cout << ' ';
+		for (int n = 1; n <= Size; ++n)
+		{
+			cout << ' ';
+			const int DISPLAY_SIZE = MAX_NAME_DISPLAY;
+			for (int i = 0; i < DISPLAY_SIZE; ++i)
+			{
+				cout << '-';
+			}
+			cout << ' ';
+		}
+		cout << '\n';
+	}
 
+	void printBlankVerticalLine()
+	{
+		for (int i = 0; i < 4; ++i) cout << ' ';
+		for (int n = 1; n <= Size; ++n)
+		{
+			cout << '|';
+			for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
+			{
+				cout << ' ';
+			}
+			cout << '|';
+		}
+		cout << '\n';
+	}
+
+	char getCharFromEffect(CellEffect effect)
+	{
+		switch (effect)
+		{
+		case BLOCK:
+			return 'B';
+		case UP:
+			return UP_CHAR;
+		case DOWN:
+			return DOWN_CHAR;
+		case LEFT:
+			return LEFT_CHAR;
+		case RIGHT:
+			return RIGHT_CHAR;
+		case START:
+			return 'S';
+		case FINISH:
+			return 'F';
+		default:
+			return '?';
+		}
+	}
+
+	void printNamedVerticalLine(int order = 0)
+	{
+		cout << " " << ((order < 10) ? "0" : "") << (order + 1) << " ";
+		char show[MAX_NAME_DISPLAY];
+		for (int n = 1; n <= Size; ++n)
+		{
+			if (Grid[order][n - 1].HourseID == -1)
+			{
+				for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
+				{
+					show[i] = ' ';
+				}
+				show[MID_NAME_DISPLAY] = getCharFromEffect(Grid[order][n - 1].Effect);
+			}
+			else
+			{
+				for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
+				{
+					show[i] = Hourses[Grid[order][n - 1].HourseID].DisplayID[i];
+				}
+			}
+			cout << '|';
+			for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
+			{
+				cout << show[i];
+			}
+			cout << '|';
+		}
+		cout << '\n';
+	}
 
 	void printMap()
 	{
+		printHeader();
+		for (int i = 1; i <= Size; ++i)
+		{
+			printRowhorizontalLine();
+			printBlankVerticalLine();
+			printNamedVerticalLine(i - 1);
+			printBlankVerticalLine();
+			printRowhorizontalLine();
+		}
 	}
 };
 
 int main()
 {
 	Map test = Map(5);
-	test.printHeader();
+	test.printMap();
 	return 0;
 }
