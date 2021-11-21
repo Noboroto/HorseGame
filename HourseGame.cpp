@@ -36,10 +36,11 @@ struct Player
 	string Username;
 	string Password;
 	string Name;
+	int NumOfHourse;
 	int Win;
 	int Tie;
 
-	Player(string username = "", string password = "", string name = "", int win = 0, int tie = 0)
+	Player(string username = "", string password = "", string name = "", int win = 0, int tie = 0, int NumOfHour = MAX_HOURSE_PER_PLAYER)
 	{
 		Username = username;
 		Password = password;
@@ -130,10 +131,11 @@ struct Hourse
 		PosY = posy;
 		PlayerID = playerid;
 		string tmp = Accounts_[playerid].Name;
-		for (int i = 0; i < (tmp.size() < MAX_NAME_DISPLAY) ? tmp.size() : MAX_NAME_DISPLAY; ++i)
+		for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
 		{
-			DisplayID[i] = tmp[i];
+			DisplayID[i] = (i < tmp.size()) ? tmp[i] : ' ';
 		}
+		DisplayID[MAX_NAME_DISPLAY - 2] = ' ';
 	}
 };
 
@@ -143,12 +145,16 @@ struct Point
 	int Y;
 	int HourseID;
 	CellEffect Effect;
-	Point(int x = 0, int y = 0, CellEffect effect = BLOCK,int hourseid = -1)
+	int ColorCode;
+	int OwnerOrder;
+	Point(int x = 0, int y = 0, CellEffect effect = BLOCK,int hourseid = -1, int colorcode = 7, int ownerorder = -1)
 	{
 		Effect = effect;
 		X = x;
 		Y = y;
 		HourseID = hourseid;
+		ColorCode = colorcode;
+		OwnerOrder = -1;
 	}
 };
 
@@ -159,11 +165,13 @@ struct Map
 	Hourse Hourses[MAX_PLAYER_PER_MAP * MAX_HOURSE_PER_PLAYER];
 	int Size;
 	int MaxTurn;
+	int NumOfPlayer;
 
-	Map(int size = 0, int maxturn = 0)
+	Map(int size = 0, int maxturn = 0, int numofplayer = 1)
 	{
 		MaxTurn = (maxturn > size*size) ? maxturn : size*size;
 		Size = size;
+		NumOfPlayer = numofplayer;
 		for (int i = 0; i < size; ++i)
 		{
 			for (int j = 0; j < size; ++j)
@@ -177,6 +185,11 @@ struct Map
 		{
 			PlayerID[i] = -1;
 		}
+	}
+
+	void initialize()
+	{
+
 	}
 
 	void saveMap(string file_name)
@@ -237,6 +250,8 @@ struct Map
 
 	bool isValidPath(const int &ID, const int& startX, const int& startY, const int& desX, const int& desY, const int Count)
 	{
+		if (startX < 0 || startX >= Size || startY < 0 || startY >= Size)
+			return false;
 		if (Grid[desX][desY].HourseID != -1 &&
 			Hourses[Grid[desX][desY].HourseID].DisplayID == Hourses[ID].DisplayID)
 			return false;
@@ -249,16 +264,12 @@ struct Map
 		switch (Grid[startY][startX].Effect)
 		{
 		case UP:
-			if (startX - 1 < 0) return false;
 			return isValidPath(ID, startX - 1, startY, desX, desY, Count - 1);
 		case DOWN:
-			if (startX + 1 >= Size) return false;
 			return isValidPath(ID, startX + 1, startY, desX, desY, Count - 1);
 		case LEFT:
-			if (startY - 1 < 0) return false;
 			return isValidPath(ID, startX, startY - 1, desX, desY, Count - 1);
 		case RIGHT:
-			if (startY + 1 >= Size) return false;
 			return isValidPath(ID, startX, startY + 1, desX, desY, Count - 1);
 		default:
 			return false;
