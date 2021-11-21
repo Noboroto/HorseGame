@@ -14,8 +14,8 @@ const string ACCOUNTS_FILE = "accounts.txt";
 //LIMITATION
 const int MAX_PLAYER_PER_MAP = 4;
 const int MAX_HOURSE_PER_PLAYER = 4;
-const int MAX_ROW = 4;
-const int MAX_COL = 4;
+const int MAX_ROW = 10;
+const int MAX_COL = 10;
 const int SPACE_BETWEEN_POINT = 2;
 const int MAX_NAME_DISPLAY = 10;
 const int MAX_ACCOUNT = 100;
@@ -30,6 +30,7 @@ const string START_STRING = "START";
 
 bool haveWinner_ = false;
 string Winner = "?";
+string Message = "";
 
 struct Player
 {
@@ -125,7 +126,7 @@ struct Hourse
 	char DisplayID[MAX_NAME_DISPLAY];
 	int PlayerID;
 
-	Hourse(int posx = 0, int posy = 0, int playerid = 0)
+	Hourse(int playerid = 0, int order = 0, int posx = -1, int posy = -1 )
 	{
 		PosX = posx;
 		PosY = posy;
@@ -136,6 +137,7 @@ struct Hourse
 			DisplayID[i] = (i < tmp.size()) ? tmp[i] : ' ';
 		}
 		DisplayID[MAX_NAME_DISPLAY - 2] = ' ';
+		DisplayID[MAX_NAME_DISPLAY - 1] = order + 1 + '0';
 	}
 };
 
@@ -181,7 +183,7 @@ struct Map
 			}
 		}
 
-		for (int i = 0; i < MAX_PLAYER_PER_MAP; +i)
+		for (int i = 0; i < MAX_PLAYER_PER_MAP; ++i)
 		{
 			PlayerID[i] = -1;
 		}
@@ -189,7 +191,10 @@ struct Map
 
 	void initialize()
 	{
-
+		for (int i = 0; i < MAX_PLAYER_PER_MAP * MAX_HOURSE_PER_PLAYER; ++i)
+		{
+			Hourses[i] = Hourse(PlayerID[i / MAX_HOURSE_PER_PLAYER], i % MAX_HOURSE_PER_PLAYER);
+		}
 	}
 
 	void saveMap(string file_name)
@@ -233,8 +238,11 @@ struct Map
 			{
 				if (Grid[desX][desY].HourseID != -1)
 				{
+					string loser = Hourses[Grid[desX][desY].HourseID].DisplayID;
+					string winner = Hourses[ID].DisplayID;
 					Hourses[Grid[desX][desY].HourseID].PosX = -1;
 					Hourses[Grid[desX][desY].HourseID].PosY = -1;
+					Message += loser + " has been kicked by " + winner + '\n';
 				}
 				Hourses[ID].PosX = desX;
 				Hourses[ID].PosY = desY;
@@ -245,7 +253,7 @@ struct Map
 				}
 			}
 		}
-		else cout << "You cannot go to this point. Please try again or end your turn\n"; 
+		else Message += "You cannot go to this point. Please try again or end your turn\n"; 
 	}
 
 	bool isValidPath(const int &ID, const int& startX, const int& startY, const int& desX, const int& desY, const int Count)
@@ -276,13 +284,34 @@ struct Map
 		}
 	}
 
+	void printHeader()
+	{
+		const int SIZE = MAX_NAME_DISPLAY + 2;
+		char pattern[SIZE];
+		cout << "   ";
+		for (int i = 0; i < SIZE; ++i)
+		{
+			pattern[i] = ' ';
+		}
+		for (int i = 1; i <= Size; ++i)
+		{
+			pattern[(SIZE / 2) - 1] = i / 10 + '0';
+			pattern[(SIZE / 2)] = i % 10 + '0';
+			for (int j = 0; j < SIZE; ++j) cout << pattern[j];
+		}
+		cout << '\n';
+	}
+
+
+
 	void printMap()
 	{
-
 	}
 };
 
 int main()
 {
+	Map test = Map(5);
+	test.printHeader();
 	return 0;
 }
