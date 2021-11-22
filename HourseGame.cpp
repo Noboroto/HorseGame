@@ -17,7 +17,7 @@ const string ACCOUNTS_FILE = "accounts.txt";
 
 //LIMITATION
 const int MAX_PLAYER_PER_MAP = 4;
-const int MAX_HOURSE_PER_PLAYER = 4;
+const int MAX_HORSE_PER_PLAYER = 4;
 const int MAX_ROW = 10;
 const int MAX_COL = 10;
 const int SPACE_BETWEEN_POINT = 2;
@@ -26,12 +26,14 @@ const int MID_NAME_DISPLAY = MAX_NAME_DISPLAY / 2;
 const int MAX_ACCOUNT = 100;
 
 //DISPLAY CHARACTER
+const char DEFAULT_CHAR = '?';
+const char BLOCK_CHAR = 'B';
 const char UP_CHAR = '^';
 const char DOWN_CHAR = 'v';
 const char LEFT_CHAR = '<';
 const char RIGHT_CHAR = '>';
-const string FINISH_STRING = "FINISH";
-const string START_STRING = "START";
+const char START_CHAR = 'S';
+const char FINISH_CHAR = 'F';
 
 bool haveWinner_ = false;
 string Winner_ = "?";
@@ -48,18 +50,13 @@ struct Player
 	int Win;
 	int Tie;
 
-	Player(string username = "", string password = "", string name = "", int win = 0, int tie = 0, int NumOfHour = MAX_HOURSE_PER_PLAYER)
+	Player(string username = "", string password = "", string name = "", int win = 0, int tie = 0, int NumOfHour = MAX_HORSE_PER_PLAYER)
 	{
 		Username = username;
 		Password = password;
 		Name = name;
 		Win = win;
 		Tie = tie;
-	}
-
-	bool canLogin(string usename, string password)
-	{
-		return (usename == Username) && (password == Password);
 	}
 };
 
@@ -138,10 +135,16 @@ void createAccount()
 
 void removeAccount(string username = "")
 {
+
 	if (username == "")
 	{
 		cout << "Please enter the account's username you want to remove! ";
 		cin >> username;
+	}	
+	if (username == "Robot")
+	{
+		cout << "You cannot remove this account!";
+		return;
 	}
 	int id = -1;
 	for (int i = 0; i < AccountCounter_; ++i)
@@ -171,6 +174,11 @@ void removeAccount(string username = "")
 		cout << "Removed!\n";
 		saveAccounts();
 	}
+}
+
+void login()
+{
+
 }
 
 int getDice(int from = 1, int to = 6)
@@ -240,7 +248,7 @@ struct Map
 {
 	int PlayerID[MAX_PLAYER_PER_MAP];
 	Point Grid[MAX_ROW][MAX_COL];
-	Hourse Hourses[MAX_PLAYER_PER_MAP * MAX_HOURSE_PER_PLAYER];
+	Hourse Hourses[MAX_PLAYER_PER_MAP * MAX_HORSE_PER_PLAYER];
 	int Size;
 	int MaxTurn;
 	int MaxPlayer;
@@ -261,13 +269,16 @@ struct Map
 			}
 		}
 
+		Grid[0][0].Effect = START;
+		Grid[Size - 1][Size - 1].Effect = FINISH;
+
 		for (int i = 0; i < MAX_PLAYER_PER_MAP; ++i)
 		{
 			PlayerID[i] = -1;
 		}
 	}
 
-	void AddAccount (string username)
+	void addAccount (string username)
 	{
 		for (int i = 0; i < AccountCounter_; ++i)
 		{
@@ -281,9 +292,9 @@ struct Map
 
 	void initialize()
 	{
-		for (int i = 0; i < MAX_PLAYER_PER_MAP * MAX_HOURSE_PER_PLAYER; ++i)
+		for (int i = 0; i < MAX_PLAYER_PER_MAP * MAX_HORSE_PER_PLAYER; ++i)
 		{
-			Hourses[i] = Hourse(PlayerID[i / MAX_HOURSE_PER_PLAYER], i % MAX_HOURSE_PER_PLAYER);
+			Hourses[i] = Hourse(PlayerID[i / MAX_HORSE_PER_PLAYER], i % MAX_HORSE_PER_PLAYER);
 		}
 	}
 
@@ -428,7 +439,7 @@ struct Map
 		switch (effect)
 		{
 		case BLOCK:
-			return 'B';
+			return BLOCK_CHAR;
 		case UP:
 			return UP_CHAR;
 		case DOWN:
@@ -438,11 +449,11 @@ struct Map
 		case RIGHT:
 			return RIGHT_CHAR;
 		case START:
-			return 'S';
+			return START_CHAR;
 		case FINISH:
-			return 'F';
+			return FINISH_CHAR;
 		default:
-			return '?';
+			return DEFAULT_CHAR;
 		}
 	}
 
@@ -493,6 +504,7 @@ struct Map
 
 int main()
 {
-	createAccount();
+	loadAccounts();
+
 	return 0;
 }
