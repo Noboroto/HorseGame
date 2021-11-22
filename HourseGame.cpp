@@ -6,7 +6,11 @@
 #include <cstdlib>
 #include <ctime>
 
-using namespace std;
+using std::cin;
+using std::cout;
+using std::string;
+using std::ifstream;
+using std::ofstream;
 
 //CONSTANTS FILE NAME
 const string ACCOUNTS_FILE = "accounts.txt";
@@ -30,8 +34,10 @@ const string FINISH_STRING = "FINISH";
 const string START_STRING = "START";
 
 bool haveWinner_ = false;
-string Winner = "?";
-string Message = "";
+string Winner_ = "?";
+string Message_ = "";
+string UserInputString_ = "";
+int UserInputInt_ = 0;
 
 struct Player
 {
@@ -58,17 +64,17 @@ struct Player
 };
 
 Player Accounts_[MAX_ACCOUNT];
-int AccountCounter;
+int AccountCounter_ = 0;
 
 void loadAccounts()
 {
 	ifstream file;
 	file.open(ACCOUNTS_FILE);
-	file >> AccountCounter;
-	AccountCounter = (AccountCounter > 100) ? 100 : AccountCounter;
+	file >> AccountCounter_;
+	AccountCounter_ = (AccountCounter_ > 100) ? 100 : AccountCounter_;
 	string tmp;
 	getline(file, tmp);
-	for (int i = 0; i < AccountCounter; ++i)
+	for (int i = 0; i < AccountCounter_; ++i)
 	{
 		Accounts_[i] = Player();
 		getline(file, tmp);
@@ -87,8 +93,8 @@ void saveAccounts()
 {
 	ofstream file;
 	file.open(ACCOUNTS_FILE);
-	file << AccountCounter << '\n';
-	for (int i = 0; i < AccountCounter; ++i)
+	file << AccountCounter_ << '\n';
+	for (int i = 0; i < AccountCounter_; ++i)
 	{
 		file << Accounts_[i].Username << '\n';
 		file << Accounts_[i].Password << '\n';
@@ -96,6 +102,75 @@ void saveAccounts()
 		file << Accounts_[i].Win << ' ' << Accounts_[i].Tie << '\n';
 	}
 	file.close();
+}
+
+void createAccount()
+{
+	cout << "Start registration\n";
+	Accounts_[AccountCounter_] = Player();
+	bool isOK = false;
+	while (!isOK)
+	{	
+		cout << "Username? ";
+		isOK = true;
+		cin >> UserInputString_;
+		for (int i = 0; i < AccountCounter_; ++i)
+		{
+			if (Accounts_[i].Username == UserInputString_)
+			{
+				isOK = false;
+				cout << "This username is exist! Please try another username!\n"; 
+				break;
+			}
+		}
+	}
+	Accounts_[AccountCounter_].Username = UserInputString_;
+	cout << "Password? ";
+	cin >> UserInputString_;
+	Accounts_[AccountCounter_].Password = UserInputString_;
+	cout << "Name? ";
+	cin >> UserInputString_;
+	Accounts_[AccountCounter_].Name = UserInputString_;
+	cout << "Registed!";
+	AccountCounter_++;
+	saveAccounts();
+}
+
+void removeAccount(string username = "")
+{
+	if (username == "")
+	{
+		cout << "Please enter the account's username you want to remove! ";
+		cin >> username;
+	}
+	int id = -1;
+	for (int i = 0; i < AccountCounter_; ++i)
+	{
+		if (Accounts_[i].Username == username)
+		{
+			id = i;
+			break;
+		}
+	}
+	if (id == -1)
+	{
+		cout << "Cannot find the account! Removing account ended!\n";
+	}
+	else
+	{
+		bool isOK = false;
+		cout << "Password? ";
+		cin >> UserInputString_;
+		if (UserInputString_ != Accounts_[id].Password) cout << "Wrong Password! Exit removing account!\n";
+		else isOK = true;
+		AccountCounter_--;
+		for (int i = id; i < AccountCounter_; ++i)
+		{
+			Accounts_[i] = Accounts_[i + 1];
+		}
+		cout << "Removed!\n";
+		saveAccounts();
+	}
 }
 
 int getDice(int from = 1, int to = 6)
@@ -127,7 +202,7 @@ struct Hourse
 	char DisplayID[MAX_NAME_DISPLAY];
 	int PlayerID;
 
-	Hourse(int playerid = 0, int order = 0, int posx = -1, int posy = -1 )
+	Hourse(int playerid = 0, int order = 0, int posx = 0, int posy = 0)
 	{
 		PosX = posx;
 		PosY = posy;
@@ -168,13 +243,15 @@ struct Map
 	Hourse Hourses[MAX_PLAYER_PER_MAP * MAX_HOURSE_PER_PLAYER];
 	int Size;
 	int MaxTurn;
+	int MaxPlayer;
 	int NumOfPlayer;
 
-	Map(int size = 0, int maxturn = 0, int numofplayer = 1)
+	Map(int size = 0, int maxturn = 0, int maxplayer = 1)
 	{
 		MaxTurn = (maxturn > size*size) ? maxturn : size*size;
 		Size = size;
-		NumOfPlayer = numofplayer;
+		MaxPlayer = maxplayer;
+		NumOfPlayer = 0;
 		for (int i = 0; i < size; ++i)
 		{
 			for (int j = 0; j < size; ++j)
@@ -187,6 +264,18 @@ struct Map
 		for (int i = 0; i < MAX_PLAYER_PER_MAP; ++i)
 		{
 			PlayerID[i] = -1;
+		}
+	}
+
+	void AddAccount (string username)
+	{
+		for (int i = 0; i < AccountCounter_; ++i)
+		{
+			if (Accounts_[i].Username == username)
+			{
+				PlayerID[NumOfPlayer] = i;
+				NumOfPlayer++;
+			}
 		}
 	}
 
@@ -243,7 +332,7 @@ struct Map
 					string winner = Hourses[ID].DisplayID;
 					Hourses[Grid[desX][desY].HourseID].PosX = -1;
 					Hourses[Grid[desX][desY].HourseID].PosY = -1;
-					Message += loser + " has been kicked by " + winner + '\n';
+					Message_ += loser + " has been kicked by " + winner + '\n';
 				}
 				Hourses[ID].PosX = desX;
 				Hourses[ID].PosY = desY;
@@ -254,7 +343,7 @@ struct Map
 				}
 			}
 		}
-		else Message += "You cannot go to this point. Please try again or end your turn\n"; 
+		else Message_ += "You cannot go to this point. Please try again or end your turn\n"; 
 	}
 
 	bool isValidPath(const int &ID, const int& startX, const int& startY, const int& desX, const int& desY, const int Count)
@@ -404,7 +493,6 @@ struct Map
 
 int main()
 {
-	Map test = Map(5);
-	test.printMap();
+	createAccount();
 	return 0;
 }
