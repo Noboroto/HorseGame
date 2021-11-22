@@ -46,7 +46,7 @@ struct Player
 	string Username;
 	string Password;
 	string Name;
-	int NumOfHourse;
+	int NumOfHorse;
 	int Win;
 	int Tie;
 
@@ -203,14 +203,14 @@ struct Settings
 
 };
 
-struct Hourse
+struct Horse
 {
 	int PosX;
 	int PosY;
 	char DisplayID[MAX_NAME_DISPLAY];
 	int PlayerID;
 
-	Hourse(int playerid = 0, int order = 0, int posx = 0, int posy = 0)
+	Horse(int playerid = 0, int order = 0, int posx = 0, int posy = 0)
 	{
 		PosX = posx;
 		PosY = posy;
@@ -229,7 +229,7 @@ struct Point
 {
 	int X;
 	int Y;
-	int HourseID;
+	int HorseID;
 	CellEffect Effect;
 	int ColorCode;
 	int OwnerOrder;
@@ -238,7 +238,7 @@ struct Point
 		Effect = effect;
 		X = x;
 		Y = y;
-		HourseID = hourseid;
+		HorseID = hourseid;
 		ColorCode = colorcode;
 		OwnerOrder = -1;
 	}
@@ -248,7 +248,7 @@ struct Map
 {
 	int PlayerID[MAX_PLAYER_PER_MAP];
 	Point Grid[MAX_ROW][MAX_COL];
-	Hourse Hourses[MAX_PLAYER_PER_MAP * MAX_HORSE_PER_PLAYER];
+	Horse Horses[MAX_PLAYER_PER_MAP * MAX_HORSE_PER_PLAYER];
 	int Size;
 	int MaxTurn;
 	int MaxPlayer;
@@ -264,7 +264,7 @@ struct Map
 		{
 			for (int j = 0; j < size; ++j)
 			{
-				Grid[i][j].HourseID = -1;
+				Grid[i][j].HorseID = -1;
 				Grid[i][j].Effect = RIGHT;
 			}
 		}
@@ -294,7 +294,7 @@ struct Map
 	{
 		for (int i = 0; i < MAX_PLAYER_PER_MAP * MAX_HORSE_PER_PLAYER; ++i)
 		{
-			Hourses[i] = Hourse(PlayerID[i / MAX_HORSE_PER_PLAYER], i % MAX_HORSE_PER_PLAYER);
+			Horses[i] = Horse(PlayerID[i / MAX_HORSE_PER_PLAYER], i % MAX_HORSE_PER_PLAYER);
 		}
 	}
 
@@ -331,23 +331,23 @@ struct Map
 		file.close();
 	}
 
-	void moveHourse(const int& ID, const int& desX, const int& desY, const int Count)
+	void moveHorse(const int& ID, const int& desX, const int& desY, const int Count)
 	{
-		if (isValidPath(ID, Hourses[ID].PosX, Hourses[ID].PosY, desX, desY, Count))
+		if (isValidPath(ID, Horses[ID].PosX, Horses[ID].PosY, desX, desY, Count))
 		{
-			if (Hourses[Grid[desX][desY].HourseID].DisplayID != Hourses[ID].DisplayID)
+			if (Horses[Grid[desX][desY].HorseID].DisplayID != Horses[ID].DisplayID)
 			{
-				if (Grid[desX][desY].HourseID != -1)
+				if (Grid[desX][desY].HorseID != -1)
 				{
-					string loser = Hourses[Grid[desX][desY].HourseID].DisplayID;
-					string winner = Hourses[ID].DisplayID;
-					Hourses[Grid[desX][desY].HourseID].PosX = -1;
-					Hourses[Grid[desX][desY].HourseID].PosY = -1;
+					string loser = Horses[Grid[desX][desY].HorseID].DisplayID;
+					string winner = Horses[ID].DisplayID;
+					Horses[Grid[desX][desY].HorseID].PosX = -1;
+					Horses[Grid[desX][desY].HorseID].PosY = -1;
 					Message_ += loser + " has been kicked by " + winner + '\n';
 				}
-				Hourses[ID].PosX = desX;
-				Hourses[ID].PosY = desY;
-				Grid[desX][desY].HourseID = ID;
+				Horses[ID].PosX = desX;
+				Horses[ID].PosY = desY;
+				Grid[desX][desY].HorseID = ID;
 				if (Grid[desX][desY].Effect == FINISH)
 				{
 					haveWinner_ = true;
@@ -361,14 +361,14 @@ struct Map
 	{
 		if (startX < 0 || startX >= Size || startY < 0 || startY >= Size)
 			return false;
-		if (Grid[desX][desY].HourseID != -1 &&
-			Hourses[Grid[desX][desY].HourseID].DisplayID == Hourses[ID].DisplayID)
+		if (Grid[desX][desY].HorseID != -1 &&
+			Horses[Grid[desX][desY].HorseID].DisplayID == Horses[ID].DisplayID)
 			return false;
 		else if (!Count && (startX != desX) && (startY != desY)) 
 			return false;
 		else if (!Count && ((startX == desX) && (startY == desY))) 
 			return true;
-		else if (Grid[startX][startY].HourseID != -1) 
+		else if (Grid[startX][startY].HorseID != -1) 
 			return false;
 		switch (Grid[startY][startX].Effect)
 		{
@@ -463,7 +463,7 @@ struct Map
 		char show[MAX_NAME_DISPLAY];
 		for (int n = 1; n <= Size; ++n)
 		{
-			if (Grid[order][n - 1].HourseID == -1)
+			if (Grid[order][n - 1].HorseID == -1)
 			{
 				for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
 				{
@@ -475,7 +475,7 @@ struct Map
 			{
 				for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
 				{
-					show[i] = Hourses[Grid[order][n - 1].HourseID].DisplayID[i];
+					show[i] = Horses[Grid[order][n - 1].HorseID].DisplayID[i];
 				}
 			}
 			cout << '|';
