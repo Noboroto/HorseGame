@@ -14,6 +14,12 @@ using std::ofstream;
 
 //CONSTANTS FILE NAME
 const string ACCOUNTS_FILE = "accounts.txt";
+const string DEFAULT_THREE = "defaultthreethree.txt";
+const string DEFAULT_FIVE = "defaultfivefive.txt";
+const string DEFAULT_SEVEN = "defaultsevenseven.txt";
+const string SPIRAL_THREE = "spiralthreethree.txt";
+const string SPIRAL_FIVE = "spiralfivefive.txt";
+const string SPIRAL_SEVEN = "spiralsevenseven.txt";
 
 //LIMITATION
 const int MAX_PLAYER_PER_MAP = 4;
@@ -463,7 +469,7 @@ struct Map
 		char show[MAX_NAME_DISPLAY];
 		for (int n = 1; n <= Size; ++n)
 		{
-			if (Grid[order][n - 1].HorseID == -1)
+			if (Grid[order][n - 1].HorseID == -1 || Grid[order][n - 1].Effect == START)
 			{
 				for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
 				{
@@ -505,6 +511,8 @@ struct Map
 int main()
 {
 	loadAccounts();
-
+	Map test = Map(6);
+	test.loadMap (SPIRAL_SEVEN);
+	test.printMap();
 	return 0;
 }
