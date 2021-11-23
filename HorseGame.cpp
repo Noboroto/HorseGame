@@ -8,13 +8,10 @@
 
 using std::cin;
 using std::cout;
-using std::string;
 using std::ifstream;
 using std::ofstream;
 
-const string BOT_ACCOUNT = "Bot";
 //CONSTANTS FILE NAME
-const string ACCOUNTS_FILE = "accounts.txt";
 const string DEFAULT_THREE = "defaultthreethree.txt";
 const string DEFAULT_FIVE = "defaultfivefive.txt";
 const string DEFAULT_SEVEN = "defaultsevenseven.txt";
@@ -28,8 +25,9 @@ const int MAX_HORSE_PER_PLAYER = 4;
 const int MAX_ROW = 10;
 const int MAX_COL = 10;
 const int SPACE_BETWEEN_POINT = 2;
-const int MAX_NAME_DISPLAY = 9;
-const int MID_NAME_DISPLAY = MAX_NAME_DISPLAY / 2;
+const int MAX_NAME = 7;
+const int MAX_CHAR_DISPLAY = 9;
+const int MID_NAME_DISPLAY = MAX_CHAR_DISPLAY / 2;
 const int MAX_ACCOUNT = 100;
 
 //DISPLAY CHARACTER
@@ -50,14 +48,21 @@ int UserInputInt_ = 0;
 
 struct Player
 {
-	string Username;
+	char Username [MAX_NAME];
 	int NumOfHorse;
 	int Win;
 	int Tie;
 
-	Player(string username = "", int win = 0, int tie = 0, int NumOfHour = MAX_HORSE_PER_PLAYER)
+	Player(char username[], int win = 0, int tie = 0, int NumOfHour = MAX_HORSE_PER_PLAYER)
 	{
-		Username = username;
+		if (username != NULL)
+		{
+			for (int i = 0; i < ((sizeof(username) < MAX_NAME) ? sizeof(username) : MAX_NAME, ++i)
+			{
+
+			}
+
+		}
 		Win = win;
 		Tie = tie;
 	}
@@ -73,16 +78,16 @@ void loadAccounts()
 {
 	ifstream file;
 	int counter;
-	file.open(ACCOUNTS_FILE);
+	file.open("accounts.txt");
 	if (file.fail()) return;
 	file >> counter;
 	AccountCounter_ = (counter > 100) ? 100 : counter + 1;
 	AccountCounter_++;
-	string tmp;
+	char tmp[100];
 	getline(file, tmp);
 	for (int i = 1; i < AccountCounter_; ++i)
 	{
-		Accounts_[i] = Player();
+		Accounts_[i] = Player(NULL);
 		getline(file, tmp);
 		Accounts_[i].Username = tmp;
 		file >> Accounts_[i].Win;
@@ -94,7 +99,7 @@ void loadAccounts()
 void saveAccounts()
 {
 	ofstream file;
-	file.open(ACCOUNTS_FILE);
+	file.open("accounts.txt");
 	file << AccountCounter_ << '\n';
 	for (int i = 1; i < AccountCounter_; ++i)
 	{
@@ -104,7 +109,7 @@ void saveAccounts()
 	file.close();
 }
 
-bool createAccount(string username = "")
+bool createAccount(char username = "")
 {
 	cout << "Start create account\n";
 	Accounts_[AccountCounter_] = Player();
@@ -207,7 +212,7 @@ struct Horse
 {
 	int PosX;
 	int PosY;
-	char DisplayID[MAX_NAME_DISPLAY];
+	char DisplayID[MAX_CHAR_DISPLAY];
 	int PlayerID;
 
 	Horse(int playerid = 0, int order = 0, int posx = 0, int posy = 0)
@@ -216,12 +221,12 @@ struct Horse
 		PosY = posy;
 		PlayerID = playerid;
 		string tmp = Accounts_[playerid].Username;
-		for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
+		for (int i = 0; i < MAX_CHAR_DISPLAY; ++i)
 		{
 			DisplayID[i] = (i < tmp.size()) ? tmp[i] : ' ';
 		}
-		DisplayID[MAX_NAME_DISPLAY - 2] = ' ';
-		DisplayID[MAX_NAME_DISPLAY - 1] = order + 1 + '0';
+		DisplayID[MAX_CHAR_DISPLAY - 2] = ' ';
+		DisplayID[MAX_CHAR_DISPLAY - 1] = order + 1 + '0';
 	}
 };
 
@@ -392,7 +397,7 @@ struct Map
 
 	void printHeader()
 	{
-		const int SIZE = MAX_NAME_DISPLAY + 2;
+		const int SIZE = MAX_CHAR_DISPLAY + 2;
 		char pattern[SIZE];
 		for (int i = 0; i < 4; ++i) cout << ' ';
 		for (int i = 0; i < SIZE; ++i)
@@ -414,7 +419,7 @@ struct Map
 		for (int n = 1; n <= Size; ++n)
 		{
 			cout << ' ';
-			const int DISPLAY_SIZE = MAX_NAME_DISPLAY;
+			const int DISPLAY_SIZE = MAX_CHAR_DISPLAY;
 			for (int i = 0; i < DISPLAY_SIZE; ++i)
 			{
 				cout << '-';
@@ -430,7 +435,7 @@ struct Map
 		for (int n = 1; n <= Size; ++n)
 		{
 			cout << '|';
-			for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
+			for (int i = 0; i < MAX_CHAR_DISPLAY; ++i)
 			{
 				cout << ' ';
 			}
@@ -465,12 +470,12 @@ struct Map
 	void printNamedVerticalLine(int order = 0)
 	{
 		cout << " " << ((order < 10) ? "0" : "") << (order + 1) << " ";
-		char show[MAX_NAME_DISPLAY];
+		char show[MAX_CHAR_DISPLAY];
 		for (int n = 1; n <= Size; ++n)
 		{
 			if (Grid[order][n - 1].HorseID == -1 || Grid[order][n - 1].Effect == START)
 			{
-				for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
+				for (int i = 0; i < MAX_CHAR_DISPLAY; ++i)
 				{
 					show[i] = ' ';
 				}
@@ -478,13 +483,13 @@ struct Map
 			}
 			else
 			{
-				for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
+				for (int i = 0; i < MAX_CHAR_DISPLAY; ++i)
 				{
 					show[i] = Horses[Grid[order][n - 1].HorseID].DisplayID[i];
 				}
 			}
 			cout << '|';
-			for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
+			for (int i = 0; i < MAX_CHAR_DISPLAY; ++i)
 			{
 				cout << show[i];
 			}
@@ -509,7 +514,7 @@ struct Map
 
 int main()
 {
-	Accounts_[0] = Player(BOT_ACCOUNT);
+	Accounts_[0] = Player("Bot");
 	AccountCounter_++;
 	loadAccounts();
 	Map test = Map(5);
