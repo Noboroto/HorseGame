@@ -12,6 +12,7 @@ using std::string;
 using std::ifstream;
 using std::ofstream;
 
+const string BOT_ACCOUNT = "Bot";
 //CONSTANTS FILE NAME
 const string ACCOUNTS_FILE = "accounts.txt";
 const string DEFAULT_THREE = "defaultthreethree.txt";
@@ -50,17 +51,13 @@ int UserInputInt_ = 0;
 struct Player
 {
 	string Username;
-	string Password;
-	string Name;
 	int NumOfHorse;
 	int Win;
 	int Tie;
 
-	Player(string username = "", string password = "", string name = "", int win = 0, int tie = 0, int NumOfHour = MAX_HORSE_PER_PLAYER)
+	Player(string username = "", int win = 0, int tie = 0, int NumOfHour = MAX_HORSE_PER_PLAYER)
 	{
 		Username = username;
-		Password = password;
-		Name = name;
 		Win = win;
 		Tie = tie;
 	}
@@ -69,23 +66,25 @@ struct Player
 Player Accounts_[MAX_ACCOUNT];
 int AccountCounter_ = 0;
 
+int OnlineID[MAX_ACCOUNT];
+int Online = 0;
+
 void loadAccounts()
 {
 	ifstream file;
+	int counter;
 	file.open(ACCOUNTS_FILE);
-	file >> AccountCounter_;
-	AccountCounter_ = (AccountCounter_ > 100) ? 100 : AccountCounter_;
+	if (file.fail()) return;
+	file >> counter;
+	AccountCounter_ = (counter > 100) ? 100 : counter + 1;
+	AccountCounter_++;
 	string tmp;
 	getline(file, tmp);
-	for (int i = 0; i < AccountCounter_; ++i)
+	for (int i = 1; i < AccountCounter_; ++i)
 	{
 		Accounts_[i] = Player();
 		getline(file, tmp);
 		Accounts_[i].Username = tmp;
-		getline(file, tmp);
-		Accounts_[i].Password = tmp;
-		getline(file, tmp);
-		Accounts_[i].Name = tmp;
 		file >> Accounts_[i].Win;
 		file >> Accounts_[i].Tie;
 	}
@@ -97,51 +96,40 @@ void saveAccounts()
 	ofstream file;
 	file.open(ACCOUNTS_FILE);
 	file << AccountCounter_ << '\n';
-	for (int i = 0; i < AccountCounter_; ++i)
+	for (int i = 1; i < AccountCounter_; ++i)
 	{
 		file << Accounts_[i].Username << '\n';
-		file << Accounts_[i].Password << '\n';
-		file << Accounts_[i].Name << '\n';
 		file << Accounts_[i].Win << ' ' << Accounts_[i].Tie << '\n';
 	}
 	file.close();
 }
 
-void createAccount()
+bool createAccount(string username = "")
 {
-	cout << "Start registration\n";
+	cout << "Start create account\n";
 	Accounts_[AccountCounter_] = Player();
-	bool isOK = false;
-	while (!isOK)
-	{	
+	if (username == "")
+	{
 		cout << "Username? ";
-		isOK = true;
-		cin >> UserInputString_;
-		for (int i = 0; i < AccountCounter_; ++i)
+		cin >> username;
+	}
+	for (int i = 0; i < AccountCounter_; ++i)
+	{
+		if (Accounts_[i].Username == username)
 		{
-			if (Accounts_[i].Username == UserInputString_)
-			{
-				isOK = false;
-				cout << "This username is exist! Please try another username!\n"; 
-				break;
-			}
+			cout << "This username is exist! Please try another username!\n"; 
+			return false;
 		}
 	}
-	Accounts_[AccountCounter_].Username = UserInputString_;
-	cout << "Password? ";
-	cin >> UserInputString_;
-	Accounts_[AccountCounter_].Password = UserInputString_;
-	cout << "Name? ";
-	cin >> UserInputString_;
-	Accounts_[AccountCounter_].Name = UserInputString_;
-	cout << "Registed!";
+	Accounts_[AccountCounter_].Username = username;
+	cout << "Registed account for "<< username << "!";
 	AccountCounter_++;
 	saveAccounts();
+	return true;
 }
 
-void removeAccount(string username = "")
+bool removeAccount(string username = "")
 {
-
 	if (username == "")
 	{
 		cout << "Please enter the account's username you want to remove! ";
@@ -150,7 +138,7 @@ void removeAccount(string username = "")
 	if (username == "Robot")
 	{
 		cout << "You cannot remove this account!";
-		return;
+		return false;
 	}
 	int id = -1;
 	for (int i = 0; i < AccountCounter_; ++i)
@@ -163,15 +151,13 @@ void removeAccount(string username = "")
 	}
 	if (id == -1)
 	{
-		cout << "Cannot find the account! Removing account ended!\n";
+		cout << "Cannot find that account! Removing account ended!\n";
+		return false;
 	}
 	else
 	{
-		bool isOK = false;
 		cout << "Password? ";
 		cin >> UserInputString_;
-		if (UserInputString_ != Accounts_[id].Password) cout << "Wrong Password! Exit removing account!\n";
-		else isOK = true;
 		AccountCounter_--;
 		for (int i = id; i < AccountCounter_; ++i)
 		{
@@ -179,12 +165,20 @@ void removeAccount(string username = "")
 		}
 		cout << "Removed!\n";
 		saveAccounts();
+		return true;
 	}
 }
 
-void login()
+int login()
 {
-
+	cout << "Please type your username ";
+	cin >> UserInputString_;
+	for (int i = 0; i < AccountCounter_; ++i)
+	{
+		if (UserInputString_ == Accounts_[i].Username) return i;
+	}
+	createAccount(UserInputString_);
+	return AccountCounter_ - 1;
 }
 
 int getDice(int from = 1, int to = 6)
@@ -221,7 +215,7 @@ struct Horse
 		PosX = posx;
 		PosY = posy;
 		PlayerID = playerid;
-		string tmp = Accounts_[playerid].Name;
+		string tmp = Accounts_[playerid].Username;
 		for (int i = 0; i < MAX_NAME_DISPLAY; ++i)
 		{
 			DisplayID[i] = (i < tmp.size()) ? tmp[i] : ' ';
@@ -290,10 +284,15 @@ struct Map
 		{
 			if (Accounts_[i].Username == username)
 			{
-				PlayerID[NumOfPlayer] = i;
-				NumOfPlayer++;
+				addAccount(i);
 			}
 		}
+	}
+
+	void addAccount(int id)
+	{
+		PlayerID[NumOfPlayer] = id;
+		NumOfPlayer++;
 	}
 
 	void initialize()
@@ -510,9 +509,31 @@ struct Map
 
 int main()
 {
+	Accounts_[0] = Player(BOT_ACCOUNT);
+	AccountCounter_++;
 	loadAccounts();
-	Map test = Map(6);
-	test.loadMap (SPIRAL_SEVEN);
+	Map test = Map(5);
+	test.loadMap(DEFAULT_FIVE);
+	test.addAccount("David");
+	test.initialize();
+	test.moveHorse(0, 0, 1, 1);
 	test.printMap();
+	/*cout << "Mode:\n";
+	cout << "1. Singleplayer\n";
+	cout << "2. Multiplayer\n";
+	cout << "Please choose the mode that you want to play! ";
+	cin >> UserInputInt_;
+	switch (UserInputInt_)
+	{
+	case 1:
+		cout << "We are still developing this mode.\n";
+		cout << "Please close the app and try again!\n";
+		system("pause");
+		return 0;
+	case 2:
+
+	default:
+		break;
+	}*/
 	return 0;
 }
