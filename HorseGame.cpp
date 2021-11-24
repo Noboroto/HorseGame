@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include <fstream>
 #include <cstdio>
-#include <string>
+#include <cstring>
 #include <cstdlib>
 #include <ctime>
 
@@ -10,14 +10,6 @@ using std::cin;
 using std::cout;
 using std::ifstream;
 using std::ofstream;
-
-//CONSTANTS FILE NAME
-const string DEFAULT_THREE = "defaultthreethree.txt";
-const string DEFAULT_FIVE = "defaultfivefive.txt";
-const string DEFAULT_SEVEN = "defaultsevenseven.txt";
-const string SPIRAL_THREE = "spiralthreethree.txt";
-const string SPIRAL_FIVE = "spiralfivefive.txt";
-const string SPIRAL_SEVEN = "spiralsevenseven.txt";
 
 //LIMITATION
 const int MAX_PLAYER_PER_MAP = 4;
@@ -40,29 +32,18 @@ const char RIGHT_CHAR = '>';
 const char START_CHAR = 'S';
 const char FINISH_CHAR = 'F';
 
-bool haveWinner_ = false;
-string Winner_ = "?";
-string Message_ = "";
-string UserInputString_ = "";
+int winnerID = -1;
 int UserInputInt_ = 0;
 
 struct Player
 {
-	char Username [MAX_NAME];
-	int NumOfHorse;
+	char Username [MAX_NAME + 1];
 	int Win;
 	int Tie;
 
-	Player(char username[], int win = 0, int tie = 0, int NumOfHour = MAX_HORSE_PER_PLAYER)
+	Player(int win = 0, int tie = 0)
 	{
-		if (username != NULL)
-		{
-			for (int i = 0; i < ((sizeof(username) < MAX_NAME) ? sizeof(username) : MAX_NAME, ++i)
-			{
-
-			}
-
-		}
+		memset(Username, '\0', MAX_NAME + 1);
 		Win = win;
 		Tie = tie;
 	}
@@ -83,13 +64,10 @@ void loadAccounts()
 	file >> counter;
 	AccountCounter_ = (counter > 100) ? 100 : counter + 1;
 	AccountCounter_++;
-	char tmp[100];
-	getline(file, tmp);
 	for (int i = 1; i < AccountCounter_; ++i)
 	{
-		Accounts_[i] = Player(NULL);
-		getline(file, tmp);
-		Accounts_[i].Username = tmp;
+		Accounts_[i] = Player();
+		file >> Accounts_[i].Username;
 		file >> Accounts_[i].Win;
 		file >> Accounts_[i].Tie;
 	}
@@ -103,87 +81,10 @@ void saveAccounts()
 	file << AccountCounter_ << '\n';
 	for (int i = 1; i < AccountCounter_; ++i)
 	{
-		file << Accounts_[i].Username << '\n';
+		file << Accounts_[i].Username << ' ';
 		file << Accounts_[i].Win << ' ' << Accounts_[i].Tie << '\n';
 	}
 	file.close();
-}
-
-bool createAccount(char username = "")
-{
-	cout << "Start create account\n";
-	Accounts_[AccountCounter_] = Player();
-	if (username == "")
-	{
-		cout << "Username? ";
-		cin >> username;
-	}
-	for (int i = 0; i < AccountCounter_; ++i)
-	{
-		if (Accounts_[i].Username == username)
-		{
-			cout << "This username is exist! Please try another username!\n"; 
-			return false;
-		}
-	}
-	Accounts_[AccountCounter_].Username = username;
-	cout << "Registed account for "<< username << "!";
-	AccountCounter_++;
-	saveAccounts();
-	return true;
-}
-
-bool removeAccount(string username = "")
-{
-	if (username == "")
-	{
-		cout << "Please enter the account's username you want to remove! ";
-		cin >> username;
-	}	
-	if (username == "Robot")
-	{
-		cout << "You cannot remove this account!";
-		return false;
-	}
-	int id = -1;
-	for (int i = 0; i < AccountCounter_; ++i)
-	{
-		if (Accounts_[i].Username == username)
-		{
-			id = i;
-			break;
-		}
-	}
-	if (id == -1)
-	{
-		cout << "Cannot find that account! Removing account ended!\n";
-		return false;
-	}
-	else
-	{
-		cout << "Password? ";
-		cin >> UserInputString_;
-		AccountCounter_--;
-		for (int i = id; i < AccountCounter_; ++i)
-		{
-			Accounts_[i] = Accounts_[i + 1];
-		}
-		cout << "Removed!\n";
-		saveAccounts();
-		return true;
-	}
-}
-
-int login()
-{
-	cout << "Please type your username ";
-	cin >> UserInputString_;
-	for (int i = 0; i < AccountCounter_; ++i)
-	{
-		if (UserInputString_ == Accounts_[i].Username) return i;
-	}
-	createAccount(UserInputString_);
-	return AccountCounter_ - 1;
 }
 
 int getDice(int from = 1, int to = 6)
@@ -203,16 +104,11 @@ enum CellEffect
 	FINISH
 };
 
-struct Settings
-{
-
-};
-
 struct Horse
 {
 	int PosX;
 	int PosY;
-	char DisplayID[MAX_CHAR_DISPLAY];
+	char DisplayID[MAX_CHAR_DISPLAY + 1];
 	int PlayerID;
 
 	Horse(int playerid = 0, int order = 0, int posx = 0, int posy = 0)
@@ -220,13 +116,13 @@ struct Horse
 		PosX = posx;
 		PosY = posy;
 		PlayerID = playerid;
-		string tmp = Accounts_[playerid].Username;
-		for (int i = 0; i < MAX_CHAR_DISPLAY; ++i)
+		strcpy(DisplayID, Accounts_[playerid].Username);
+		DisplayID[strlen(DisplayID)] = ' ';
+		DisplayID[strlen(DisplayID)] = order + 1 + '0';
+		while (strlen(DisplayID) < MAX_CHAR_DISPLAY)
 		{
-			DisplayID[i] = (i < tmp.size()) ? tmp[i] : ' ';
+			DisplayID[strlen(DisplayID)] = ' ';
 		}
-		DisplayID[MAX_CHAR_DISPLAY - 2] = ' ';
-		DisplayID[MAX_CHAR_DISPLAY - 1] = order + 1 + '0';
 	}
 };
 
@@ -256,15 +152,17 @@ struct Map
 	Horse Horses[MAX_PLAYER_PER_MAP * MAX_HORSE_PER_PLAYER];
 	int Size;
 	int MaxTurn;
-	int MaxPlayer;
 	int NumOfPlayer;
+	int HorsePerPlayer;
+	int currentTurn;
 
-	Map(int size = 0, int maxturn = 0, int maxplayer = 1)
+	Map(int size = 0, int maxturn = 0, int horseperplayer = 1)
 	{
 		MaxTurn = (maxturn > size*size) ? maxturn : size*size;
 		Size = size;
-		MaxPlayer = maxplayer;
 		NumOfPlayer = 0;
+		HorsePerPlayer = horseperplayer;
+		currentTurn = 0;
 		for (int i = 0; i < size; ++i)
 		{
 			for (int j = 0; j < size; ++j)
@@ -279,56 +177,71 @@ struct Map
 
 		for (int i = 0; i < MAX_PLAYER_PER_MAP; ++i)
 		{
-			PlayerID[i] = -1;
+			PlayerID[i] = 0;
 		}
 	}
 
-	void addAccount (string username)
+	void addAccount()
 	{
+		cout << "Username? ";
+		char name[MAX_NAME + 1];
+		int pos = -1;
+		cin.getline(name, MAX_NAME + 1, '\n');
+		cin.clear();
+		cin.ignore(INT_MAX, '\n');
 		for (int i = 0; i < AccountCounter_; ++i)
 		{
-			if (Accounts_[i].Username == username)
+			if (!strcmp(name, Accounts_[i].Username))
 			{
-				addAccount(i);
+				pos = i;
+				break;
 			}
 		}
-	}
-
-	void addAccount(int id)
-	{
-		PlayerID[NumOfPlayer] = id;
+		if (pos < 0)
+		{
+			Accounts_[AccountCounter_] = Player();
+			strcpy(Accounts_[AccountCounter_].Username, name);
+			pos = AccountCounter_;
+			AccountCounter_++;
+			saveAccounts();
+		}
+		PlayerID[NumOfPlayer] = pos;
 		NumOfPlayer++;
 	}
 
 	void initialize()
 	{
-		for (int i = 0; i < MAX_PLAYER_PER_MAP * MAX_HORSE_PER_PLAYER; ++i)
+		for (int i = 0; i < NumOfPlayer * HorsePerPlayer; ++i)
 		{
-			Horses[i] = Horse(PlayerID[i / MAX_HORSE_PER_PLAYER], i % MAX_HORSE_PER_PLAYER);
+			Horses[i] = Horse(PlayerID[i / (NumOfPlayer * HorsePerPlayer)], i % (NumOfPlayer * HorsePerPlayer));
 		}
 	}
 
-	void saveMap(string file_name)
-	{
-		ofstream file;
-		file.open(file_name);
-		file << Size << '\n';
-		for (int i = 0; i < Size; ++i)
-		{
-			for (int j = 0; j < Size; ++j)
-			{
-				file << (int)Grid[i][j].Effect << ' ';
-			}
-			file << '\n';
-		}
-		file.close();
-	}
-
-	void loadMap(string file_name)
+	void loadMap(int id)
 	{
 		ifstream file;
 		int x;
-		file.open(file_name);
+		switch (id)
+		{
+		case 1:
+			file.open("defaultthreethree.txt");
+			break;
+		case 2:
+			file.open("defaultfivefive.txt");
+			break;
+		case 3:
+			file.open("defaultsevenseven.txt");
+			break;
+		case 4:
+			file.open("spiralthreethree.txt");
+			break;
+		case 5:
+			file.open("spiralfivefive.txt");
+			break;
+		case 6:
+			file.open("spiralsevenseven.txt");
+			break;
+		}
 		file >> Size;
 		for (int i = 0; i < Size; ++i)
 		{
@@ -349,22 +262,20 @@ struct Map
 			{
 				if (Grid[desX][desY].HorseID != -1)
 				{
-					string loser = Horses[Grid[desX][desY].HorseID].DisplayID;
-					string winner = Horses[ID].DisplayID;
 					Horses[Grid[desX][desY].HorseID].PosX = -1;
 					Horses[Grid[desX][desY].HorseID].PosY = -1;
-					Message_ += loser + " has been kicked by " + winner + '\n';
+					cout << Horses[Grid[desX][desY].HorseID].DisplayID << " has been kicked by " << Horses[ID].DisplayID << '\n';
 				}
 				Horses[ID].PosX = desX;
 				Horses[ID].PosY = desY;
 				Grid[desX][desY].HorseID = ID;
 				if (Grid[desX][desY].Effect == FINISH)
 				{
-					haveWinner_ = true;
+					winnerID = Horses[ID].PlayerID;
 				}
 			}
 		}
-		else Message_ += "You cannot go to this point. Please try again or end your turn\n"; 
+		cout << "You cannot go to this point. Please try again or end your turn\n"; 
 	}
 
 	bool isValidPath(const int &ID, const int& startX, const int& startY, const int& desX, const int& desY, const int Count)
@@ -389,6 +300,7 @@ struct Map
 		case LEFT:
 			return isValidPath(ID, startX, startY - 1, desX, desY, Count - 1);
 		case RIGHT:
+		case START:
 			return isValidPath(ID, startX, startY + 1, desX, desY, Count - 1);
 		default:
 			return false;
@@ -512,33 +424,86 @@ struct Map
 	}
 };
 
+Map startGame(int BoardID, int NumOfPlayer, int NumOfHorse)
+{
+	Map test = Map(0, 1, NumOfHorse);
+	test.loadMap(BoardID);
+	char x[2];
+	for (int i = 0; i < NumOfPlayer; ++i)
+	{
+		cout << "Fill information of player " << i + 1 << '\n';
+		test.addAccount();
+	}
+	test.initialize();
+	return test;
+}
+
+Map Preparing()
+{
+	char UserCharInput_[5];
+	int MapID, NumOfPlayer, HorsePerPlayer, DiceFrom, DiceTo;
+
+	Select_map:
+	cout << "Select your map by type a number\n";
+	cout << "1. Default 3x3 map\n";
+	cout << "2. Default 5x5 map\n";
+	cout << "3. Default 7x7 map\n";
+	cout << "4. Spiral 3x3 map\n";
+	cout << "5. Spiral 5x5 map\n";
+	cout << "6. Spiral 7x7 map\n";
+	cin >> UserCharInput_;
+	cin.clear();
+	cin.ignore(INT_MAX, '\n');
+	if (UserCharInput_[0] < '1' || UserCharInput_[0] > '6')
+	{
+		cout << "Wrong format, please try again!\n";
+		goto Select_map;
+	}
+	MapID = UserCharInput_[0] - '0';
+	Select_NumOfPlayer:
+	cout << "How many players? (2 -> 4) ";
+	cin >> UserCharInput_;
+	cin.clear();
+	cin.ignore(INT_MAX, '\n');
+	if (UserCharInput_[0] < '2' || UserCharInput_[0] > '4')
+	{
+		cout << "Wrong format, please try again!\n";
+		goto Select_NumOfPlayer;
+	}
+	NumOfPlayer = UserCharInput_[0] - '0';
+	Select_HorsePerPlayer:
+	cout << "How many horse per player? (1 -> 4) ";
+	cin >> UserCharInput_;
+	cin.clear();
+	cin.ignore(INT_MAX, '\n');
+	if (UserCharInput_[0] < '1' || UserCharInput_[0] > '4')
+	{
+		cout << "Wrong format, please try again!\n";
+		goto Select_HorsePerPlayer;
+	}
+	HorsePerPlayer = UserCharInput_[0] - '0';
+	return startGame(MapID, NumOfPlayer, HorsePerPlayer);
+}
+
 int main()
 {
-	Accounts_[0] = Player("Bot");
+	Accounts_[AccountCounter_] = Player();
+	Accounts_[AccountCounter_].Username[0] = 'B';
+	Accounts_[AccountCounter_].Username[1] = 'o';
+	Accounts_[AccountCounter_].Username[2] = 't';
 	AccountCounter_++;
 	loadAccounts();
-	Map test = Map(5);
-	test.loadMap(DEFAULT_FIVE);
-	test.addAccount("David");
-	test.initialize();
-	test.moveHorse(0, 0, 1, 1);
-	test.printMap();
-	/*cout << "Mode:\n";
-	cout << "1. Singleplayer\n";
-	cout << "2. Multiplayer\n";
-	cout << "Please choose the mode that you want to play! ";
-	cin >> UserInputInt_;
-	switch (UserInputInt_)
-	{
-	case 1:
-		cout << "We are still developing this mode.\n";
-		cout << "Please close the app and try again!\n";
-		system("pause");
-		return 0;
-	case 2:
 
-	default:
-		break;
-	}*/
+	while (true)
+	{
+		system("cls");
+		cout << "In this game, whoever appears first in the FINISH POINT wins.\n";
+		cout << "The game will end after square of map's size turns, and all players will tie\n";
+		Map MainGame = Preparing();
+		MainGame.moveHorse(0, 0, 3, 3);
+		MainGame.moveHorse(1, 0, 2, 2);
+		MainGame.printMap();
+		system("pause");
+	}
 	return 0;
 }
